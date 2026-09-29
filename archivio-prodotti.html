@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f5c4a">
+<title>Archivio prodotti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f1f4f2; --surface:#ffffff; --ink:#14211e; --muted:#5d6d68; --line:#d9e1de;
+  --accent:#0f5c4a; --accent-ink:#ffffff; --danger:#b3261e; --chip:#dcebe5; --shade:rgba(10,20,18,.45);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1614; --surface:#172220; --ink:#e8f0ed; --muted:#93a59f; --line:#2a3a36;
+    --accent:#3fb897; --accent-ink:#06211a; --danger:#ff8a80; --chip:#1f3a33; --shade:rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1614; --surface:#172220; --ink:#e8f0ed; --muted:#93a59f; --line:#2a3a36;
+  --accent:#3fb897; --accent-ink:#06211a; --danger:#ff8a80; --chip:#1f3a33; --shade:rgba(0,0,0,.6);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:'Schibsted Grotesk',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:17px; line-height:1.35; -webkit-tap-highlight-color:transparent;
+  padding-bottom:110px;
+}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+header.top{
+  position:sticky; top:env(safe-area-inset-top,0px); z-index:5;
+  background:var(--bg); padding:12px 14px 10px; border-bottom:1px solid var(--line);
+}
+.title-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+h1{font-size:22px;font-weight:800;margin:0;letter-spacing:-.01em}
+.count{color:var(--muted);font-size:14px}
+.search{display:flex;gap:8px}
+.search input{
+  flex:1;min-width:0;height:52px;padding:0 14px;border-radius:14px;
+  border:2px solid var(--line);background:var(--surface);
+}
+.search input:focus{border-color:var(--accent);outline:none}
+.icon-btn{
+  width:52px;height:52px;border-radius:14px;border:0;background:var(--accent);color:var(--accent-ink);
+  display:grid;place-items:center;flex:none;
+}
+.icon-btn.listening{animation:pulse 1s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 10px color-mix(in srgb,var(--accent) 25%,transparent)}}
+@media (prefers-reduced-motion:reduce){.icon-btn.listening{animation:none;outline:4px solid var(--accent);outline-offset:2px}}
+.icon-btn svg{width:26px;height:26px}
+.hint{color:var(--muted);font-size:14px;margin:8px 2px 0}
+.chip-row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.chip{background:var(--chip);border-radius:999px;padding:5px 12px;font-size:14px;font-weight:500}
+.link{background:none;border:0;color:var(--accent);font-weight:700;padding:6px 2px;font-size:14px}
+
+main{padding:0 14px}
+.letter{
+  position:sticky; top:calc(env(safe-area-inset-top,0px) + var(--head,118px));
+  background:var(--bg); z-index:3; font-weight:800; color:var(--accent);
+  font-size:15px; padding:14px 2px 4px; border-bottom:2px solid var(--accent); margin-bottom:2px;
+}
+.row{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:transparent;border:0;border-bottom:1px solid var(--line);
+  padding:14px 2px;min-height:60px;
+}
+.row .n{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:500}
+.row .p{font-weight:800;font-variant-numeric:tabular-nums;font-size:18px;white-space:nowrap}
+.empty{text-align:center;color:var(--muted);padding:48px 20px}
+.empty b{display:block;color:var(--ink);font-size:19px;margin-bottom:6px}
+
+.bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:6;
+  padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(to top,var(--bg) 70%,transparent);
+  display:flex;gap:10px;
+}
+.btn{
+  height:54px;border-radius:14px;border:2px solid var(--accent);background:transparent;
+  color:var(--accent);font-weight:700;padding:0 18px;
+}
+.btn.main{background:var(--accent);color:var(--accent-ink);flex:1;font-size:18px}
+.btn.danger{border-color:var(--danger);color:var(--danger)}
+.btn.small{height:44px;font-size:15px}
+
+.overlay{
+  position:fixed;inset:0;background:var(--shade);z-index:10;display:none;align-items:flex-end;justify-content:center;
+}
+.overlay.open{display:flex}
+.sheet{
+  width:100%;max-width:520px;max-height:92%;overflow:auto;background:var(--surface);
+  border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));
+}
+.sheet h2{margin:0 0 14px;font-size:20px}
+label{display:block;font-weight:700;font-size:14px;margin:12px 0 5px}
+.field{display:flex;gap:8px}
+.field input,textarea{
+  width:100%;height:52px;padding:0 14px;border-radius:12px;border:2px solid var(--line);
+  background:var(--bg);
+}
+textarea{height:130px;padding:10px 12px;font-size:13px;font-family:ui-monospace,Menlo,monospace}
+.field input:focus,textarea:focus{border-color:var(--accent);outline:none}
+.actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.actions .btn{flex:1}
+.status{min-height:22px;font-size:14px;color:var(--muted);margin-top:8px}
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));
+  background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:20;
+  font-size:15px;max-width:90%;display:none;text-align:center
+}
+.toast.show{display:block}
+</style>
+</head>
+<body>
+
+<header class="top" id="head">
+  <div class="title-row">
+    <h1>Archivio prodotti</h1>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="search">
+    <input id="q" type="search" enterkeyhint="search" autocomplete="off"
+           placeholder="Cerca: nome, sotto 20, tra 10 e 30" aria-label="Cerca prodotti">
+    <button class="icon-btn" id="micSearch" aria-label="Cerca a voce">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>
+    </button>
+  </div>
+  <div class="chip-row" id="chips" hidden></div>
+</header>
+
+<main id="list"></main>
+
+<div class="bar">
+  <button class="btn" id="btnBackup">Backup</button>
+  <button class="btn main" id="btnAdd">Aggiungi prodotto</button>
+</div>
+
+<!-- Aggiungi / modifica -->
+<div class="overlay" id="ovEdit" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+  <div class="sheet">
+    <h2 id="editTitle">Nuovo prodotto</h2>
+    <button class="btn small" id="micAdd" style="width:100%">Detta a voce</button>
+    <div class="status" id="editStatus">Di' per esempio: “maglietta rossa 15 euro”.</div>
+    <label for="fName">Nome</label>
+    <div class="field"><input id="fName" autocomplete="off" autocapitalize="sentences"></div>
+    <label for="fPrice">Prezzo in euro</label>
+    <div class="field"><input id="fPrice" inputmode="decimal" autocomplete="off" placeholder="0,00"></div>
+    <div class="actions">
+      <button class="btn danger" id="btnDelete" hidden>Elimina</button>
+      <button class="btn" id="btnCancel">Annulla</button>
+      <button class="btn main" id="btnSave">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- Backup -->
+<div class="overlay" id="ovBackup" role="dialog" aria-modal="true" aria-labelledby="bkTitle">
+  <div class="sheet">
+    <h2 id="bkTitle">Backup e trasferimento</h2>
+    <label for="bkText">Copia questo testo per salvare o passare l'archivio all'altro telefono</label>
+    <textarea id="bkText" spellcheck="false"></textarea>
+    <div class="actions">
+      <button class="btn" id="bkCopy">Copia</button>
+      <button class="btn main" id="bkImport">Importa il testo incollato</button>
+    </div>
+    <div class="status" id="bkStatus">Importare unisce i prodotti: quelli con lo stesso nome vengono aggiornati.</div>
+    <div class="actions"><button class="btn" id="bkClose">Chiudi</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+  var KEY='archivio-prodotti-v1';
+  var items=[];
+  var editingId=null;
+
+  function load(){
+    try{var r=localStorage.getItem(KEY); items=r?JSON.parse(r):[]; if(!Array.isArray(items))items=[];}
+    catch(e){items=[];}
+  }
+  function save(){
+    try{localStorage.setItem(KEY,JSON.stringify(items));}
+    catch(e){toast('Impossibile salvare su questo dispositivo');}
+  }
+  var $=function(id){return document.getElementById(id)};
+  var eur=new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'});
+  function money(n){return eur.format(n)}
+  function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+  function cap(s){s=s.trim();return s?s.charAt(0).toUpperCase()+s.slice(1):s}
+  function toNum(s){var n=parseFloat(String(s).replace(',','.'));return isNaN(n)?null:n}
+  function esc(s){return s.replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+
+  var tt;
+  function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show')},2600)}
+
+  /* ---------- Interpretazione della ricerca ---------- */
+  var N='(\\d+(?:[.,]\\d+)?)';
+  function parseQuery(q){
+    var t=' '+q.toLowerCase().replace(/€|euro/g,' ')+' ';
+    var f={name:'',min:null,max:null,exact:null,labels:[]};
+    var m;
+    if((m=t.match(new RegExp('\\s(?:tra|fra|da)\\s+'+N+'\\s+(?:e|a)\\s+'+N+'(?=\\s)')))){
+      var a=toNum(m[1]),b=toNum(m[2]);f.min=Math.min(a,b);f.max=Math.max(a,b);
+      f.labels.push('tra '+money(f.min)+' e '+money(f.max));t=t.replace(m[0],' ');
+    }
+    if((m=t.match(new RegExp('\\s(?:sotto(?:\\s+i)?|meno\\s+di|fino\\s+a|entro|massimo|max|inferiore\\s+a)\\s+'+N+'(?=\\s)')))){
+      f.max=toNum(m[1]);f.labels.push('fino a '+money(f.max));t=t.replace(m[0],' ');
+    }
+    if((m=t.match(new RegExp('\\s(?:sopra(?:\\s+i)?|oltre|pi[uù]\\s+di|almeno|minimo|min|superiore\\s+a)\\s+'+N+'(?=\\s)')))){
+      f.min=toNum(m[1]);f.labels.push('da '+money(f.min));t=t.replace(m[0],' ');
+    }
+    if(f.min===null&&f.max===null&&(m=t.match(new RegExp('\\s'+N+'(?=\\s)')))){
+      f.exact=toNum(m[1]);f.labels.push('esattamente '+money(f.exact));t=t.replace(m[0],' ');
+    }
+    t=t.replace(/\b(cerca|trova|mostra|mostrami|prodotti|prodotto|articoli|articolo|costano|costa|prezzo|che)\b/g,' ');
+    f.name=t.replace(/\s+/g,' ').trim();
+    return f;
+  }
+  function matches(it,f){
+    if(f.min!==null&&it.price<f.min)return false;
+    if(f.max!==null&&it.price>f.max)return false;
+    if(f.exact!==null&&Math.abs(it.price-f.exact)>0.005)return false;
+    if(f.name){
+      var n=it.name.toLowerCase();
+      var words=f.name.split(' ');
+      for(var i=0;i<words.length;i++){if(n.indexOf(words[i])===-1)return false}
+    }
+    return true;
+  }
+
+  /* ---------- Interpretazione dell'aggiunta a voce ---------- */
+  function parseAdd(text){
+    var t=text.trim().replace(/^(aggiungi|aggiungere|inserisci|nuovo prodotto|nuovo)\s+/i,'');
+    var re=/(\d+)(?:[.,](\d+))?\s*(?:euro|€)?(?:\s*(?:e|virgola)\s*(\d{1,2}))?\s*(?:centesimi|cent)?\s*$/i;
+    var m=t.match(re);
+    if(!m)return {name:cap(t),price:null};
+    var price=parseInt(m[1],10);
+    if(m[2])price=parseFloat(m[1]+'.'+m[2]);
+    else if(m[3])price+=parseInt(m[3],10)/(m[3].length===1?10:100);
+    var name=t.slice(0,m.index).replace(/\b(prezzo|costa|a|da|di|per)\s*$/i,'').replace(/[€\s]+$/,'');
+    return {name:cap(name),price:price};
+  }
+
+  /* ---------- Elenco ---------- */
+  function render(){
+    var f=parseQuery($('q').value);
+    var sorted=items.slice().sort(function(a,b){return a.name.localeCompare(b.name,'it',{sensitivity:'base'})});
+    var shown=sorted.filter(function(it){return matches(it,f)});
+    var searching=$('q').value.trim()!=='';
+
+    $('count').textContent=searching?shown.length+' di '+items.length:items.length+(items.length===1?' prodotto':' prodotti');
+
+    var chips=$('chips');
+    if(searching&&(f.labels.length||f.name)){
+      var h='';
+      if(f.name)h+='<span class="chip">nome: '+esc(f.name)+'</span>';
+      f.labels.forEach(function(l){h+='<span class="chip">'+esc(l)+'</span>'});
+      h+='<button class="link" id="clearQ">Azzera</button>';
+      chips.innerHTML=h;chips.hidden=false;
+      $('clearQ').onclick=function(){$('q').value='';render()};
+    }else{chips.hidden=true;chips.innerHTML=''}
+
+    var out='',last='';
+    if(!shown.length){
+      out=items.length===0
+        ?'<div class="empty"><b>L\'archivio è vuoto</b>Premi “Aggiungi prodotto” per iniziare, anche a voce.</div>'
+        :'<div class="empty"><b>Nessun risultato</b>Prova con un altro nome o un altro prezzo.</div>';
+    }
+    shown.forEach(function(it){
+      var L=it.name.charAt(0).toUpperCase();
+      if(!/[A-ZÀ-Ý]/.test(L))L='#';
+      if(L!==last){out+='<div class="letter">'+esc(L)+'</div>';last=L}
+      out+='<button class="row" data-id="'+it.id+'"><span class="n">'+esc(it.name)+'</span><span class="p">'+money(it.price)+'</span></button>';
+    });
+    $('list').innerHTML=out;
+    document.documentElement.style.setProperty('--head',$('head').offsetHeight+'px');
+  }
+  $('list').addEventListener('click',function(e){
+    var r=e.target.closest('.row');if(r)openEdit(r.getAttribute('data-id'));
+  });
+  $('q').addEventListener('input',render);
+  window.addEventListener('resize',function(){document.documentElement.style.setProperty('--head',$('head').offsetHeight+'px')});
+
+  /* ---------- Scheda aggiungi / modifica ---------- */
+  function open(id){$(id).classList.add('open')}
+  function close(id){$(id).classList.remove('open')}
+  function openEdit(id){
+    editingId=id;
+    var it=id?items.filter(function(x){return x.id===id})[0]:null;
+    $('editTitle').textContent=it?'Modifica prodotto':'Nuovo prodotto';
+    $('fName').value=it?it.name:'';
+    $('fPrice').value=it?String(it.price).replace('.',','):'';
+    $('btnDelete').hidden=!it;
+    $('editStatus').textContent=it?'Cambia il prezzo e premi Salva.':'Di\' per esempio: “maglietta rossa 15 euro”.';
+    open('ovEdit');
+    setTimeout(function(){(it?$('fPrice'):$('fName')).focus()},60);
+  }
+  $('btnAdd').onclick=function(){openEdit(null)};
+  $('btnCancel').onclick=function(){close('ovEdit')};
+  $('btnSave').onclick=function(){
+    var name=cap($('fName').value);var price=toNum($('fPrice').value);
+    if(!name){toast('Scrivi il nome del prodotto');$('fName').focus();return}
+    if(price===null||price<0){toast('Scrivi un prezzo valido');$('fPrice').focus();return}
+    price=Math.round(price*100)/100;
+    if(editingId){
+      items.forEach(function(x){if(x.id===editingId){x.name=name;x.price=price}});
+      toast('Prodotto aggiornato');
+    }else{
+      items.push({id:uid(),name:name,price:price});
+      toast('Prodotto aggiunto');
+    }
+    save();close('ovEdit');render();
+  };
+  $('btnDelete').onclick=function(){
+    if(!editingId)return;
+    var it=items.filter(function(x){return x.id===editingId})[0];
+    if(it&&confirm('Eliminare “'+it.name+'”?')){
+      items=items.filter(function(x){return x.id!==editingId});
+      save();close('ovEdit');render();toast('Prodotto eliminato');
+    }
+  };
+  ['ovEdit','ovBackup'].forEach(function(id){
+    $(id).addEventListener('click',function(e){if(e.target===$(id))close(id)});
+  });
+
+  /* ---------- Voce ---------- */
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  var rec=null;
+  function listen(btn,onText,onStatus){
+    if(!SR){onStatus('La voce non è disponibile in questo browser. Usa Chrome.');return}
+    if(rec){try{rec.stop()}catch(e){}return}
+    rec=new SR();rec.lang='it-IT';rec.interimResults=false;rec.maxAlternatives=1;
+    var got=false;
+    rec.onstart=function(){btn.classList.add('listening');onStatus('Ti ascolto…')};
+    rec.onresult=function(ev){got=true;onText(ev.results[0][0].transcript)};
+    rec.onerror=function(ev){
+      var msg={'not-allowed':'Microfono non consentito. Controlla i permessi del browser.',
+               'service-not-allowed':'Microfono non consentito. Controlla i permessi del browser.',
+               'no-speech':'Non ho sentito nulla. Riprova.','audio-capture':'Microfono non trovato.',
+               'network':'Serve la connessione internet per il riconoscimento vocale.'}[ev.error];
+      onStatus(msg||'Errore vocale: '+ev.error);
+    };
+    rec.onend=function(){btn.classList.remove('listening');rec=null};
+    try{rec.start()}catch(e){rec=null;onStatus('Impossibile avviare il microfono')}
+  }
+  $('micSearch').onclick=function(){
+    var b=this;
+    listen(b,function(t){$('q').value=t.replace(/[.,;!?]+$/,'');render()},function(m){toast(m)});
+  };
+  $('micAdd').onclick=function(){
+    var b=this;
+    listen(b,function(t){
+      var p=parseAdd(t);
+      $('fName').value=p.name;
+      $('fPrice').value=p.price===null?'':String(p.price).replace('.',',');
+      $('editStatus').textContent=p.price===null
+        ?'Ho capito “'+t+'”, ma manca il prezzo. Scrivilo qui sotto.'
+        :'Ho capito “'+t+'”. Controlla e premi Salva.';
+    },function(m){$('editStatus').textContent=m});
+  };
+
+  /* ---------- Backup ---------- */
+  $('btnBackup').onclick=function(){
+    $('bkText').value=JSON.stringify({app:'archivio-prodotti',v:1,items:items});
+    $('bkStatus').textContent='Importare unisce i prodotti: quelli con lo stesso nome vengono aggiornati.';
+    open('ovBackup');
+  };
+  $('bkClose').onclick=function(){close('ovBackup')};
+  $('bkCopy').onclick=function(){
+    var ta=$('bkText');ta.focus();ta.select();
+    var ok=false;
+    try{ok=document.execCommand('copy')}catch(e){}
+    if(!ok&&navigator.clipboard){navigator.clipboard.writeText(ta.value).then(function(){$('bkStatus').textContent='Copiato.'},function(){});return}
+    $('bkStatus').textContent=ok?'Copiato.':'Seleziona il testo e copialo a mano.';
+  };
+  $('bkImport').onclick=function(){
+    var data;
+    try{data=JSON.parse($('bkText').value)}catch(e){$('bkStatus').textContent='Testo non valido. Incolla il backup completo.';return}
+    var arr=data&&Array.isArray(data.items)?data.items:null;
+    if(!arr){$('bkStatus').textContent='Questo non sembra un backup dell\'archivio.';return}
+    var added=0,updated=0;
+    arr.forEach(function(x){
+      if(!x||typeof x.name!=='string'||typeof x.price!=='number')return;
+      var ex=items.filter(function(y){return y.name.toLowerCase()===x.name.toLowerCase()})[0];
+      if(ex){if(ex.price!==x.price){ex.price=x.price;updated++}}
+      else{items.push({id:uid(),name:cap(x.name),price:x.price});added++}
+    });
+    save();render();
+    $('bkStatus').textContent='Fatto: '+added+' nuovi, '+updated+' aggiornati.';
+  };
+
+  load();render();
+})();
+</script>
+</body>
+</html>
